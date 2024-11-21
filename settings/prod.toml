@@ -2,8 +2,11 @@ profile = "prod"
 
 [server]
 addr = "0.0.0.0"
-port = 8_080
+port = 3_030
 
-[http]
+[elasticsearch]
+url = "http://localhost:9200"
+index = "poi_v1"
 timeout = 10
+
 

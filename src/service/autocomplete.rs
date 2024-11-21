@@ -1,13 +1,12 @@
-use axum::Error;
-
+use crate::client::client::ElasticsearchClientExt;
 use crate::dto::request::AutocompleteRequest;
 
-use crate::dto::response::AutocompleteResponse;
+use crate::dto::{error::AutocompleteError, response::AutocompleteResponse};
 use crate::server::state::AppState;
 
 pub async fn get_suggestions(
-    _state: AppState,
-    _req: AutocompleteRequest,
-) -> Result<AutocompleteResponse, Error> {
-    unimplemented!()
+    state: &AppState,
+    request: AutocompleteRequest,
+) -> Result<AutocompleteResponse, AutocompleteError> {
+    state.elasticsearch.get_suggestions(&request).await
 }

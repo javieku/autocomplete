@@ -1,21 +1,22 @@
 use std::fmt::Error;
 use std::sync::Arc;
 
-//use crate::client::http::HttpClient;
+use crate::client::client::ElasticsearchClientExt;
 use crate::configuration::app_config::AppConfig;
+use elasticsearch::Elasticsearch;
 
 #[derive(Clone)]
 pub struct AppState {
     pub config: Arc<AppConfig>,
-    // pub http: HttpClient,
+    pub elasticsearch: Arc<Elasticsearch>,
 }
 
 impl AppState {
     pub async fn new(config: AppConfig) -> Result<Self, Error> {
-        //let http = HttpClient::build_from_config(&config)?;
+        let elasticsearch = Arc::new(Elasticsearch::build_from_config(&config));
         Ok(Self {
             config: Arc::new(config),
-            //     http,
+            elasticsearch,
         })
     }
 }

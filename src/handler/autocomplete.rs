@@ -1,3 +1,4 @@
+use crate::dto::error::AutocompleteError;
 use crate::dto::request::AutocompleteRequest;
 use crate::dto::response::AutocompleteResponse;
 use crate::server::state::AppState;
@@ -11,15 +12,15 @@ use axum::Router;
 pub async fn autocomplete(
     State(state): State<AppState>,
     Json(request): Json<AutocompleteRequest>,
-) -> Result<Json<AutocompleteResponse>, String> {
-    match autocomplete::get_suggestions(state, request).await {
+) -> Result<Json<AutocompleteResponse>, AutocompleteError> {
+    match autocomplete::get_suggestions(&state, request).await {
         Ok(response) => {
-            print!("Successfully found suggestions");
+            println!("Successfully found suggestions");
             Ok(Json(response))
         }
         Err(e) => {
-            print!("There was an error while fetching suggestions {e:?}");
-            Err(e.to_string())
+            println!("There was an error while fetching suggestions {e:?}");
+            Err(e)
         }
     }
 }

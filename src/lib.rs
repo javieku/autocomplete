@@ -1,3 +1,4 @@
+pub mod client;
 pub mod configuration;
 pub mod constant;
 pub mod dto;

@@ -3,7 +3,7 @@ use std::str::FromStr;
 use config::{ConfigError, Environment};
 use serde::Deserialize;
 
-use crate::configuration::http::HttpClientConfig;
+use crate::configuration::elasticsearch::ElasticsearchConfig;
 use crate::configuration::server::ServerConfig;
 use crate::utils::dir::get_project_root;
 
@@ -11,7 +11,7 @@ use crate::utils::dir::get_project_root;
 pub struct AppConfig {
     pub profile: Profile,
     pub server: ServerConfig,
-    pub http: HttpClientConfig,
+    pub elasticsearch: ElasticsearchConfig,
 }
 
 impl AppConfig {

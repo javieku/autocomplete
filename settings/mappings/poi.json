@@ -1,0 +1,24 @@
+{
+  "mappings": {
+    "properties": {
+      "name": {
+        "type": "text",
+        "fields": {
+          "raw": {
+            "type": "keyword"
+          },
+          "suggest": {
+            "type": "completion"
+          }
+        }
+      },
+      "description": {
+        "type": "text"    
+      },
+      "location": {
+        "type": "geo_point"
+      }
+    }
+  }
+}
+
