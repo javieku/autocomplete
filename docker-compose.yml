@@ -1,0 +1,28 @@
+version: '3.7'
+services:
+  
+  es:
+    image: elasticsearch:8.16.0
+    ports:
+      - "9200:9200"
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: false
+      xpack.security.enrollment.enabled: false
+    command: >
+      /bin/sh -c "./bin/elasticsearch-plugin list | grep -q analysis-icu
+      || ./bin/elasticsearch-plugin list | grep -q analysis-smartcn
+      || ./bin/elasticsearch-plugin install analysis-icu
+      && ./bin/elasticsearch-plugin install analysis-smartcn;
+      /usr/local/bin/docker-entrypoint.sh"
+    restart: always
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.16.0
+    container_name: kibana
+    environment:
+      ELASTICSEARCH_HOSTS: "http://es:9200"
+      xpack.security.enabled: false
+      xpack.security.enrollment.enabled: false
+    ports:
+      - "5601:5601"
