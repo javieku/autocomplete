@@ -1,3 +1,4 @@
+use super::response::Suggest;
 use crate::{
     configuration::app_config::AppConfig,
     dto::{request::AutocompleteRequest, response::AutocompleteResponse},
@@ -6,37 +7,10 @@ use anyhow::Result;
 use elasticsearch::http::transport::Transport;
 use elasticsearch::{Elasticsearch, SearchParts};
 use log::trace;
-use serde::Deserialize;
 
 pub trait ElasticsearchClientExt {
     fn build_from_config(config: &AppConfig) -> Self;
     async fn get_suggestions(&self, request: &AutocompleteRequest) -> Result<AutocompleteResponse>;
-}
-
-#[derive(Deserialize, Debug)]
-struct Source {
-    name: String,
-}
-
-#[derive(Deserialize)]
-struct ElasticsearchResponse {
-    suggest: Suggest,
-}
-
-#[derive(Deserialize, Debug)]
-struct Suggest {
-    #[serde(rename = "poi-suggestions")]
-    poi_suggestions: Vec<PoiSuggestion>,
-}
-
-#[derive(Deserialize, Debug)]
-struct PoiSuggestion {
-    options: Vec<OptionEntry>,
-}
-
-#[derive(Deserialize, Debug)]
-struct OptionEntry {
-    _source: Source,
 }
 
 impl ElasticsearchClientExt for Elasticsearch {
@@ -58,13 +32,7 @@ impl ElasticsearchClientExt for Elasticsearch {
         trace!("Elasticsearch Response: {}", response_body);
 
         let suggest: Suggest = serde_json::from_value(response_body["suggest"].clone())?;
-        let mut result = Vec::new();
-        for suggestion in suggest.poi_suggestions {
-            for option in suggestion.options {
-                result.push(option._source.name);
-            }
-        }
 
-        Ok(AutocompleteResponse::new(result))
+        Ok(AutocompleteResponse::from(suggest))
     }
 }
