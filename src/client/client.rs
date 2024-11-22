@@ -3,8 +3,8 @@ use crate::{
     dto::{error::AutocompleteError, request::AutocompleteRequest, response::AutocompleteResponse},
 };
 use elasticsearch::http::transport::Transport;
-
 use elasticsearch::{Elasticsearch, SearchParts};
+use log::trace;
 use serde::Deserialize;
 
 pub trait ElasticsearchClientExt {
@@ -55,17 +55,17 @@ impl ElasticsearchClientExt for Elasticsearch {
         request: &AutocompleteRequest,
     ) -> Result<AutocompleteResponse, AutocompleteError> {
         let request_json = serde_json::Value::from(request);
-        println!("{:?}", request_json);
+        trace!("Elasticsearch request to be executed: {:?}", request_json);
         let index_name = SearchParts::Index(&["poi_v1"]);
         let search_response = self.search(index_name).body(request_json).send().await?;
 
         let response_body = search_response.json::<serde_json::Value>().await?;
-        let suggest: Suggest = serde_json::from_value(response_body["suggest"].clone())?;
+        trace!("Elasticsearch Response: {}", response_body);
 
+        let suggest: Suggest = serde_json::from_value(response_body["suggest"].clone())?;
         let mut result = Vec::new();
         for suggestion in suggest.poi_suggestions {
             for option in suggestion.options {
-                println!("Name: {}", option._source.name);
                 result.push(option._source.name);
             }
         }

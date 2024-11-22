@@ -1,11 +1,11 @@
 use std::str::FromStr;
 
-use config::{ConfigError, Environment};
-use serde::Deserialize;
-
 use crate::configuration::elasticsearch::ElasticsearchConfig;
 use crate::configuration::server::ServerConfig;
 use crate::utils::dir::get_project_root;
+use config::{ConfigError, Environment};
+use log::info;
+use serde::Deserialize;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct AppConfig {
@@ -26,7 +26,7 @@ impl AppConfig {
             .add_source(config::File::from(config_dir.join(profile_filename)))
             .add_source(env_src)
             .build()?;
-        println!("Successfully read config profile: {profile}.");
+        info!("Successfully read config profile: {profile}.");
         config.try_deserialize()
     }
 }

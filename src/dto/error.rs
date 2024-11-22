@@ -1,10 +1,10 @@
+use axum::extract::{rejection::JsonRejection, Json};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use elasticsearch::Error as ElasticsearchError;
+use log::error;
 use serde::Serialize;
 use serde_json::Error as SerdeJsonError;
-
-use axum::extract::{rejection::JsonRejection, Json};
 
 #[derive(Debug)]
 pub enum AutocompleteError {
@@ -28,6 +28,20 @@ impl IntoResponse for AutocompleteError {
             AutocompleteError::JsonRejection(rejection) => {
                 (rejection.status(), rejection.body_text())
             }
+            AutocompleteError::ElasticsearchTimeout(es_error) => (
+                es_error
+                    .status_code()
+                    .unwrap_or(StatusCode::GATEWAY_TIMEOUT),
+                es_error.to_string(),
+            ),
+            AutocompleteError::ElasticsearchGatewayError(es_error) => (
+                es_error.status_code().unwrap_or(StatusCode::BAD_GATEWAY),
+                es_error.to_string(),
+            ),
+            AutocompleteError::ElasticsearchSerialization(es_error) => (
+                es_error.status_code().unwrap_or(StatusCode::BAD_GATEWAY),
+                es_error.to_string(),
+            ),
             _ => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "Something went wrong".to_owned(),
@@ -40,6 +54,7 @@ impl IntoResponse for AutocompleteError {
 
 impl From<ElasticsearchError> for AutocompleteError {
     fn from(es_error: ElasticsearchError) -> Self {
+        error!("ElasticsearchError: {}", es_error);
         if es_error.is_json() {
             AutocompleteError::ElasticsearchSerialization(es_error)
         } else if es_error.is_timeout() {
@@ -52,6 +67,7 @@ impl From<ElasticsearchError> for AutocompleteError {
 
 impl From<serde_json::Error> for AutocompleteError {
     fn from(error: SerdeJsonError) -> Self {
+        error!("SerdeJsonError: {}", error);
         AutocompleteError::SerdeSerialization(error)
     }
 }

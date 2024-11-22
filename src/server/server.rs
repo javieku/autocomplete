@@ -1,6 +1,7 @@
 use super::state::AppState;
 use crate::configuration::app_config::AppConfig;
 use crate::handler::autocomplete::create_router_app;
+use log::info;
 use std::fmt::Error;
 
 pub struct AppServer {
@@ -13,7 +14,7 @@ impl AppServer {
             .await
             .unwrap();
         let addr = tcp.local_addr().unwrap();
-        println!("The server is listening on: {addr}");
+        info!("The server is listening on: {addr}");
         config.server.port = addr.port();
         let state = AppState::new(config).await?;
         Ok(Self { state, tcp })

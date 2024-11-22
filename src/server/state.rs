@@ -1,9 +1,8 @@
-use std::fmt::Error;
-use std::sync::Arc;
-
 use crate::client::client::ElasticsearchClientExt;
 use crate::configuration::app_config::AppConfig;
 use elasticsearch::Elasticsearch;
+use std::fmt::Error;
+use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct AppState {

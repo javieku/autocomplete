@@ -7,6 +7,7 @@ use axum::extract::State;
 use axum::routing::post;
 use axum::Json;
 use axum::Router;
+use log::trace;
 
 #[axum_macros::debug_handler]
 pub async fn autocomplete(
@@ -15,11 +16,11 @@ pub async fn autocomplete(
 ) -> Result<Json<AutocompleteResponse>, AutocompleteError> {
     match autocomplete::get_suggestions(&state, request).await {
         Ok(response) => {
-            println!("Successfully found suggestions");
+            trace!("Successfully found suggestions");
             Ok(Json(response))
         }
         Err(e) => {
-            println!("There was an error while fetching suggestions {e:?}");
+            trace!("There was an error while fetching suggestions {e:?}");
             Err(e)
         }
     }
