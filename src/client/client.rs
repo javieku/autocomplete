@@ -10,7 +10,10 @@ use log::trace;
 
 pub trait ElasticsearchClientExt {
     fn build_from_config(config: &AppConfig) -> Self;
-    async fn get_suggestions(&self, request: &AutocompleteRequest) -> Result<AutocompleteResponse>;
+    fn get_suggestions(
+        &self,
+        request: &AutocompleteRequest,
+    ) -> impl std::future::Future<Output = Result<AutocompleteResponse>> + Send;
 }
 
 impl ElasticsearchClientExt for Elasticsearch {
@@ -22,6 +25,7 @@ impl ElasticsearchClientExt for Elasticsearch {
             return Elasticsearch::default();
         }
     }
+
     async fn get_suggestions(&self, request: &AutocompleteRequest) -> Result<AutocompleteResponse> {
         let request_json = serde_json::Value::from(request);
         trace!("Elasticsearch request to be executed: {:?}", request_json);
