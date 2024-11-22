@@ -3,6 +3,7 @@ use std::str::FromStr;
 use crate::configuration::elasticsearch::ElasticsearchConfig;
 use crate::configuration::server::ServerConfig;
 use crate::utils::dir::get_project_root;
+use anyhow::Result;
 use config::{ConfigError, Environment};
 use log::info;
 use serde::Deserialize;

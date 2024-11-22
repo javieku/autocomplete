@@ -2,21 +2,20 @@ use axum::extract::{rejection::JsonRejection, Json};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use elasticsearch::Error as ElasticsearchError;
-use log::error;
+use log::{error, trace};
 use serde::Serialize;
 use serde_json::Error as SerdeJsonError;
 
 #[derive(Debug)]
 pub enum AutocompleteError {
-    // The request body contained invalid JSON
     JsonRejection(JsonRejection),
     ElasticsearchTimeout(ElasticsearchError),
     ElasticsearchSerialization(ElasticsearchError),
     ElasticsearchGatewayError(ElasticsearchError),
     SerdeSerialization(SerdeJsonError),
+    UnknownError(anyhow::Error),
 }
 
-// Tell axum how `AutocompleteError` should be converted into a response.
 impl IntoResponse for AutocompleteError {
     fn into_response(self) -> Response {
         #[derive(Serialize)]
@@ -28,12 +27,9 @@ impl IntoResponse for AutocompleteError {
             AutocompleteError::JsonRejection(rejection) => {
                 (rejection.status(), rejection.body_text())
             }
-            AutocompleteError::ElasticsearchTimeout(es_error) => (
-                es_error
-                    .status_code()
-                    .unwrap_or(StatusCode::GATEWAY_TIMEOUT),
-                es_error.to_string(),
-            ),
+            AutocompleteError::ElasticsearchTimeout(es_error) => {
+                (StatusCode::GATEWAY_TIMEOUT, es_error.to_string())
+            }
             AutocompleteError::ElasticsearchGatewayError(es_error) => (
                 es_error.status_code().unwrap_or(StatusCode::BAD_GATEWAY),
                 es_error.to_string(),
@@ -61,6 +57,27 @@ impl From<ElasticsearchError> for AutocompleteError {
             AutocompleteError::ElasticsearchTimeout(es_error)
         } else {
             AutocompleteError::ElasticsearchGatewayError(es_error)
+        }
+    }
+}
+
+impl From<anyhow::Error> for AutocompleteError {
+    fn from(error: anyhow::Error) -> Self {
+        error!(
+            "Root_cause: {} \r\n source: {:?} \r\n error: {:?}",
+            error.root_cause(),
+            error.source(),
+            error.to_string()
+        );
+
+        trace!("Backtrace: {}", error.backtrace());
+
+        match error.downcast::<ElasticsearchError>() {
+            Ok(es_error) => AutocompleteError::from(es_error),
+            Err(e) => match e.downcast::<serde_json::Error>() {
+                Ok(serde_error) => AutocompleteError::from(serde_error),
+                Err(e) => AutocompleteError::UnknownError(e),
+            },
         }
     }
 }

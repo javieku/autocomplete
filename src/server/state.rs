@@ -1,5 +1,6 @@
 use crate::client::client::ElasticsearchClientExt;
 use crate::configuration::app_config::AppConfig;
+use anyhow::Result;
 use elasticsearch::Elasticsearch;
 use std::fmt::Error;
 use std::sync::Arc;

@@ -1,7 +1,8 @@
 use crate::{
     configuration::app_config::AppConfig,
-    dto::{error::AutocompleteError, request::AutocompleteRequest, response::AutocompleteResponse},
+    dto::{request::AutocompleteRequest, response::AutocompleteResponse},
 };
+use anyhow::Result;
 use elasticsearch::http::transport::Transport;
 use elasticsearch::{Elasticsearch, SearchParts};
 use log::trace;
@@ -9,10 +10,7 @@ use serde::Deserialize;
 
 pub trait ElasticsearchClientExt {
     fn build_from_config(config: &AppConfig) -> Self;
-    async fn get_suggestions(
-        &self,
-        request: &AutocompleteRequest,
-    ) -> Result<AutocompleteResponse, AutocompleteError>;
+    async fn get_suggestions(&self, request: &AutocompleteRequest) -> Result<AutocompleteResponse>;
 }
 
 #[derive(Deserialize, Debug)]
@@ -20,7 +18,7 @@ struct Source {
     name: String,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize)]
 struct ElasticsearchResponse {
     suggest: Suggest,
 }
@@ -50,10 +48,7 @@ impl ElasticsearchClientExt for Elasticsearch {
             return Elasticsearch::default();
         }
     }
-    async fn get_suggestions(
-        &self,
-        request: &AutocompleteRequest,
-    ) -> Result<AutocompleteResponse, AutocompleteError> {
+    async fn get_suggestions(&self, request: &AutocompleteRequest) -> Result<AutocompleteResponse> {
         let request_json = serde_json::Value::from(request);
         trace!("Elasticsearch request to be executed: {:?}", request_json);
         let index_name = SearchParts::Index(&["poi_v1"]);

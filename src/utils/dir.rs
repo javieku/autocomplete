@@ -1,6 +1,7 @@
+use anyhow::Result;
 use std::path::PathBuf;
 
-pub fn get_project_root() -> std::io::Result<PathBuf> {
+pub fn get_project_root() -> Result<PathBuf> {
     if let Some(root) = get_cargo_project_root()? {
         Ok(root)
     } else {
@@ -8,7 +9,7 @@ pub fn get_project_root() -> std::io::Result<PathBuf> {
     }
 }
 
-pub fn get_cargo_project_root() -> std::io::Result<Option<PathBuf>> {
+pub fn get_cargo_project_root() -> Result<Option<PathBuf>> {
     let current_path = std::env::current_dir()?;
 
     for ancestor in current_path.ancestors() {

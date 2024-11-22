@@ -1,6 +1,7 @@
 use super::state::AppState;
 use crate::configuration::app_config::AppConfig;
 use crate::handler::autocomplete::create_router_app;
+use anyhow::Result;
 use log::info;
 use std::fmt::Error;
 

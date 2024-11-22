@@ -7,6 +7,7 @@ keywords = ["web", "api", "rest","elasticsearch"]
 license = "MIT"
 
 [dependencies]
+anyhow = "1.0.93"
 axum = "0.7.9"
 axum-macros = "0.4.2"
 config = "0.14.0"

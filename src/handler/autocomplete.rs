@@ -3,6 +3,7 @@ use crate::dto::request::AutocompleteRequest;
 use crate::dto::response::AutocompleteResponse;
 use crate::server::state::AppState;
 use crate::service::autocomplete;
+use anyhow::Result;
 use axum::extract::State;
 use axum::routing::post;
 use axum::Json;
@@ -21,7 +22,7 @@ pub async fn autocomplete(
         }
         Err(e) => {
             trace!("There was an error while fetching suggestions {e:?}");
-            Err(e)
+            Err(AutocompleteError::from(e))
         }
     }
 }
