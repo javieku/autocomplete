@@ -8,13 +8,19 @@ use axum::extract::State;
 use axum::routing::post;
 use axum::Json;
 use axum::Router;
-use log::trace;
+use garde::Validate;
+use log::{info, trace};
 
 #[axum_macros::debug_handler]
 pub async fn autocomplete(
     State(state): State<AppState>,
     Json(request): Json<AutocompleteRequest>,
 ) -> Result<Json<AutocompleteResponse>, AutocompleteError> {
+    if let Err(e) = request.validate() {
+        info!("Invalid request: {e}");
+        return Err(AutocompleteError::from(e));
+    }
+
     match autocomplete::get_suggestions(&state, request).await {
         Ok(response) => {
             trace!("Successfully found suggestions");

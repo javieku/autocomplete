@@ -1,14 +1,18 @@
+use axum::extract::rejection::JsonDataError;
 use axum::extract::{rejection::JsonRejection, Json};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use elasticsearch::Error as ElasticsearchError;
+use garde::Report;
 use log::{error, trace};
 use serde::Serialize;
 use serde_json::Error as SerdeJsonError;
 
 #[derive(Debug)]
 pub enum AutocompleteError {
-    JsonRejection(JsonRejection),
+    GardeValidationError(Report),
+    JsonExtractorRejection(JsonRejection),
+    JsonDataError(JsonDataError),
     ElasticsearchTimeout(ElasticsearchError),
     ElasticsearchSerialization(ElasticsearchError),
     ElasticsearchGatewayError(ElasticsearchError),
@@ -24,7 +28,10 @@ impl IntoResponse for AutocompleteError {
         }
 
         let (status, message) = match self {
-            AutocompleteError::JsonRejection(rejection) => {
+            AutocompleteError::JsonExtractorRejection(rejection) => {
+                (rejection.status(), rejection.body_text())
+            }
+            AutocompleteError::JsonDataError(rejection) => {
                 (rejection.status(), rejection.body_text())
             }
             AutocompleteError::ElasticsearchTimeout(es_error) => {
@@ -38,6 +45,9 @@ impl IntoResponse for AutocompleteError {
                 es_error.status_code().unwrap_or(StatusCode::BAD_GATEWAY),
                 es_error.to_string(),
             ),
+            AutocompleteError::GardeValidationError(report) => {
+                (StatusCode::BAD_REQUEST, report.to_string())
+            }
             _ => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "Something went wrong".to_owned(),
@@ -45,6 +55,12 @@ impl IntoResponse for AutocompleteError {
         };
 
         (status, Json(ErrorResponse { message })).into_response()
+    }
+}
+
+impl From<garde::Report> for AutocompleteError {
+    fn from(report: garde::Report) -> Self {
+        AutocompleteError::GardeValidationError(report)
     }
 }
 
@@ -58,6 +74,18 @@ impl From<ElasticsearchError> for AutocompleteError {
         } else {
             AutocompleteError::ElasticsearchGatewayError(es_error)
         }
+    }
+}
+
+impl From<JsonRejection> for AutocompleteError {
+    fn from(rejection: JsonRejection) -> Self {
+        AutocompleteError::JsonExtractorRejection(rejection)
+    }
+}
+
+impl From<JsonDataError> for AutocompleteError {
+    fn from(rejection: JsonDataError) -> Self {
+        AutocompleteError::JsonDataError(rejection)
     }
 }
 

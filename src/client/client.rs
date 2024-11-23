@@ -29,8 +29,15 @@ impl ElasticsearchClientExt for Elasticsearch {
     async fn get_suggestions(&self, request: &AutocompleteRequest) -> Result<AutocompleteResponse> {
         let request_json = serde_json::Value::from(request);
         trace!("Elasticsearch request to be executed: {:?}", request_json);
+
         let index_name = SearchParts::Index(&["poi_v1"]);
-        let search_response = self.search(index_name).body(request_json).send().await?;
+
+        let search_response = self
+            .search(index_name)
+            .body(request_json)
+            .send()
+            .await?
+            .error_for_status_code()?;
 
         let response_body = search_response.json::<serde_json::Value>().await?;
         trace!("Elasticsearch Response: {}", response_body);
